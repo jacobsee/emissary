@@ -14,7 +14,7 @@ def process(context, params):
 
     if "script" in params:
         code = code_template.render(code_inject=params["script"])
-        local_vars = {}.update(context)
+        local_vars = dict(locals())
         exec(code, local_vars)
         result = local_vars["fn"](params)
         return result
