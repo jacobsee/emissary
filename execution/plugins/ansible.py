@@ -24,7 +24,7 @@ def process(ctx, params):
 
     context.CLIARGS = ImmutableDict(connection=connection, module_path=['.'], forks=10, become=become,
                                     become_method=become_method, become_user=become_user, check=False, diff=False)
-    results_callback = ResultCallback()
+    # results_callback = ResultCallback()
     inventory = InventoryManager(loader=loader, sources=[inventory_path])
     variable_manager = VariableManager(loader=loader, inventory=inventory)
 
@@ -40,7 +40,7 @@ def process(ctx, params):
             variable_manager=variable_manager,
             loader=loader,
             passwords=passwords,
-            stdout_callback=results_callback,
+            # stdout_callback=results_callback,
             # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
         )
         for play_data in plays:

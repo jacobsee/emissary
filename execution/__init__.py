@@ -2,8 +2,24 @@ import tempfile
 import shutil
 import importlib
 import threading
+import os
 from execution.cd import cd
 from threading import Lock
+
+
+def initialize(task):
+    for step in task["steps"]:
+        plugin = importlib.import_module('execution.plugins.' + step["plugin"])
+        if hasattr(plugin, "initialize") and callable(plugin.initialize):
+            print(f"Initializing plugin {step['plugin']}")
+            if "repository" in step and "path" in step and os.path.isdir(step["repository"] + "/" + step["path"]):
+                with cd(step["repository"] + "/" + step["path"]):
+                    plugin.initialize(step["params"])
+            elif "repository" in step and os.path.isdir(step["repository"]):
+                with cd(step["repository"]):
+                    plugin.initialize(step["params"])
+            else:
+                plugin.initialize(step["params"])
 
 
 def build_task(task):
