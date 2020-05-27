@@ -1,6 +1,7 @@
 from kubernetes import client, config
 from os import listdir, path
 import yaml
+import re
 
 
 def initialize(params):
