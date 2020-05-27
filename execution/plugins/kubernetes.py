@@ -1,5 +1,5 @@
 from kubernetes import client, config
-from os import listdir
+from os import listdir, path
 import yaml
 
 
