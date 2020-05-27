@@ -77,7 +77,10 @@ def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, **kwargs
     # python class name convention
     group = "".join(word.capitalize() for word in group.split('.'))
     fcn_to_call = "{0}{1}Api".format(group, version.capitalize())
-    k8s_api = getattr(client, fcn_to_call)(k8s_client)
+    try:
+        k8s_api = getattr(client, fcn_to_call)(k8s_client)
+    except:
+        k8s_api = client.CustomObjectsApi(k8s_client)
     # Replace CamelCased action_type into snake_case
     kind = yml_object["kind"]
     kind = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', kind)
@@ -91,9 +94,13 @@ def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, **kwargs
             kwargs['namespace'] = namespace
         resp = getattr(k8s_api, "create_namespaced_{0}".format(kind))(
             body=yml_object, **kwargs)
-    else:
+    elif hasattr(k8s_api, "create_{0}".format(kind)):
         kwargs.pop('namespace', None)
         resp = getattr(k8s_api, "create_{0}".format(kind))(
+            body=yml_object, **kwargs)
+    else:
+        kwargs.pop('namespace', None)
+        k8s_client.create_namespaced_custom_object(
             body=yml_object, **kwargs)
     if verbose:
         msg = "{0} created.".format(kind)
