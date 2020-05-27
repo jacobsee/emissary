@@ -12,6 +12,7 @@ pyyaml = "*"
 flask = "*"
 ansible = "*"
 kubernetes = "*"
+inflect = "*"
 
 [requires]
 python_version = "3.7"

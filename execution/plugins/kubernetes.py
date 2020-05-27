@@ -2,7 +2,7 @@ from kubernetes import client, config
 from os import listdir, path
 import yaml
 import re
-
+import inflect
 
 def initialize(params):
     if "mode" not in params:
@@ -66,7 +66,7 @@ def create_from_dict(k8s_client, data, verbose=False, namespace='default', **kwa
         raise FailToCreateError(api_exceptions)
 
 
-def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, **kwargs):
+def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, namespace="", **kwargs):
     group, _, version = yml_object["apiVersion"].partition("/")
     if version == "":
         version = group
@@ -90,9 +90,9 @@ def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, **kwargs
     if hasattr(k8s_api, "create_namespaced_{0}".format(kind)):
         # Decide which namespace we are going to put the object in,
         # if any
-        if "namespace" in yml_object["metadata"]:
-            namespace = yml_object["metadata"]["namespace"]
-            kwargs['namespace'] = namespace
+        # if "namespace" in yml_object["metadata"]:
+        #     namespace = yml_object["metadata"]["namespace"]
+        #     kwargs['namespace'] = namespace
         resp = getattr(k8s_api, "create_namespaced_{0}".format(kind))(
             body=yml_object, **kwargs)
     elif hasattr(k8s_api, "create_{0}".format(kind)):
@@ -102,6 +102,10 @@ def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, **kwargs
     else:
         kwargs.pop('namespace', None)
         resp = k8s_api.create_namespaced_custom_object(
+            group=group,
+            version=version,
+            namespace=namespace,
+            plural=inflect.engine().plural(kind).lower(),
             body=yml_object, **kwargs)
     if verbose:
         msg = "{0} created.".format(kind)
