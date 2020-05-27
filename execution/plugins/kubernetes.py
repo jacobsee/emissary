@@ -101,7 +101,7 @@ def create_from_yaml_single_item(k8s_client, yml_object, verbose=False, **kwargs
             body=yml_object, **kwargs)
     else:
         kwargs.pop('namespace', None)
-        k8s_client.create_namespaced_custom_object(
+        resp = k8s_api.create_namespaced_custom_object(
             body=yml_object, **kwargs)
     if verbose:
         msg = "{0} created.".format(kind)
