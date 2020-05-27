@@ -1,0 +1,9 @@
+{{- if .Values.setupConfigMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emissary-config
+data:
+  config.yml: |
+{{ indent 4 .Values.configFileContents }}
+{{- end }}

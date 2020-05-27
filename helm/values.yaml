@@ -1,0 +1,19 @@
+##############
+# Build params
+##############
+
+git:
+  url: https://github.com/jacobsee/emissary.git
+  ref: master
+
+builderImage: python:3.6
+
+################
+# Runtime params
+################
+
+setupConfigMap: false
+configFileContents: |
+  nothing here
+
+configMapName: emissary-config
