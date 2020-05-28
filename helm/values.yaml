@@ -17,3 +17,7 @@ configFileContents: |
   nothing here
 
 configMapName: emissary-config
+
+giveClusterAdmin: false
+specifyServiceAccount: false
+serviceAccount: ""

@@ -1,4 +1,3 @@
-
 apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
@@ -51,6 +50,13 @@ spec:
       - name: config-volume
         configMap:
           name: {{ .Values.configMapName }}
+      {{- if .Values.giveClusterAdmin }}
+      serviceAccount: {{ include "app.fullname" . }}
+      serviceAccountName: {{ include "app.fullname" . }}
+      {{- else if .Values.specifyServiceAccount }}
+      serviceAccount: {{ .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      {{- end }}
   triggers:
   - type: ConfigChange
   - type: ImageChange

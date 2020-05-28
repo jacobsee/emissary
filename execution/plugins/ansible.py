@@ -13,11 +13,13 @@ import json
 def process(ctx, params):
     playbook_path = params["playbook_path"] if "playbook_path" in params else "site.yml"
     inventory_path = params["inventory_path"] if "inventory_path" in params else "inventory/hosts"
-    extra_vars = params["extra_vars"] if "extra_vars" in params else None
     connection = params["connection"] if "connection" in params else "local"
     become = params["become"] if "become" in params else None
     become_method = params["become_method"] if "become_method" in params else None
     become_user = params["become_user"] if "become_user" in params else None
+    extra_vars = dict(ctx)
+    if "extra_vars" in params:
+        extra_vars.update(params["extra_vars"])
 
     loader = DataLoader()
     passwords = dict(vault_pass=params["vault_password"] if "vault_password" in params else "")

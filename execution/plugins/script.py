@@ -32,4 +32,5 @@ def process(context, params):
         local_vars = dict(locals())
         exec(code, local_vars)
         result = local_vars["fn"](params)
+        context.update(local_vars["context"])
         return result
