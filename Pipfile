@@ -13,6 +13,7 @@ flask = "*"
 ansible = "*"
 kubernetes = "*"
 inflect = "*"
+six = "*"
 
 [requires]
 python_version = "3.7"
