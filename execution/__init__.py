@@ -27,13 +27,12 @@ def build_task(task):
     @multithread
     @lock
     @handle_errors(task)
-    def task_function(params={}):
+    def task_function(params={}, context={}):
         with tempfile.TemporaryDirectory() as temp_dir:
             required_repositories = {step["repository"] for step in task["steps"] if "repository" in step}
             for repository in required_repositories:
                 shutil.copytree("tmp/" + repository, temp_dir + "/" + repository)
             with cd(temp_dir):
-                context = {}
                 for step in task["steps"]:
                     # Load necessary execution plugin
                     plugin = importlib.import_module('execution.plugins.' + step["plugin"])
@@ -60,8 +59,8 @@ def build_task(task):
 
 
 def multithread(fn):
-    def run_threaded():
-        job_thread = threading.Thread(target=fn)
+    def run_threaded(*args, **kwargs):
+        job_thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
         job_thread.start()
     return run_threaded
 

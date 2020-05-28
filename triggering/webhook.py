@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import sys
 import threading
 import datetime
@@ -26,7 +26,7 @@ class WebHook:
             def wrapped_job():
                 print(f"Webhook handler is executing task {name} at {datetime.datetime.now()}")
                 try:
-                    value = job()
+                    value = job(context=dict(request.args))
                     if isinstance(value, str) or isinstance(value, tuple):
                         return value
                     else:
