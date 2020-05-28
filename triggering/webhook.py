@@ -37,7 +37,7 @@ class WebHook:
             return wrapped_job
 
         def listener(self):
-            self.app.run(port=self.port, debug=False, use_reloader=False)
+            self.app.run(port=self.port, host="0.0.0.0", debug=False, use_reloader=False)
 
         def listen(self):
             listener = threading.Thread(name='Webhook Listener', target=self.listener)
