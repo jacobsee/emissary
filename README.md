@@ -1,25 +1,189 @@
-# TODO: Write a good README
+# Emissary [working title]
 
-This is a workflow engine for integrating systems by acting as a higher-order automation and triggering system around existing tools and scripts.
+A higher-order workflow composition and triggering mechanism designed to take advantage of existing tools and scripts.
 
-## Currently supports 
+<hr>
 
-Triggering:
-* Scheduled
-* Webhook
+* [How Does It Work?](#hdiw)
+* [Configuration](#config)
+  * [Introduction](#config-introduction)
+  * [Repositories](#config-repositories)
+  * [Triggers](#config-triggers)
+  * Steps & Parameters
+  * Context
+  * Concurrency
+* Available Plugins
+  * Ansible
+  * Kubernetes
+  * Script
+* [Deployment](#deployment)
 
-Plugins:
-* Ansible
-* Python scripting
+### <a name="hdiw"></a>How Does It Work?
 
-## Coming next
+It would be helpful to think of this tool as a _workflow orchestrator_.
 
-Plugins:
-* Read/write of Kubernetes objects in-cluster
+It takes a single configuration file containing:
 
-## Repository Support
+* A number of tasks
+* A list of repositories that those tasks depend on
+* A set of triggers defining when those tasks should be run
 
-Resources are fetched from git repositories as-needed and do not need to be bundled in with this system.
+Here is simple workflow demonstrating all of these things:
+
+```yaml
+repositories:
+  - name: automation-repo
+    url: https://github.com/my-org/some-ansible-playbooks.git
+
+tasks:
+  - name: Run my Ansible playbook
+    description: Runs an Ansible playbook under a number of trigger scenarios
+    triggers:
+      - type: scheduled
+        every: 2 hours
+      - type: scheduled
+        every: thursday
+        at: "15:30"
+      - type: webhook
+        route: /do_a_thing
+    steps:
+      - plugin: ansible
+        repository: automation-repo
+        params:
+          playbook_path: site.yml
+          inventory_path: inventory
+```
+
+In this case, we have pulled in one repository (`https://github.com/my-org/some-ansible-playbooks.git`) and scheduled a task which executes a playbook in that repository every 2 hours, every Thursday at 3:30PM, and every time a webhook at the route `/do_a_thing` is called by some other service.
+
+> :exclamation: **There is _no filesystem persistence_ between task executions!** Each execution runs in an environment representative of a fresh clone of the Git repository, even if previous executions have written/modified/deleted any files.
+
+This is a very simple example of a task definition. We'll see later in this document how task definitions can be used to string together more complicated logic.
+
+### <a name="config"></a>Configuration
+
+#### <a name="config-introduction"></a>Introduction
+
+The configuration YAML file described in surrounding sections should be somewhere on the filesystem accessible by the Python application. If you are running this application standalone, you will need to set the environment variable `CONFIG_FILE` to the path of the config file to use.
+
+If you use the included Helm chart to deploy to an OpenShift cluster and supply a `ConfigMap` containing a `config.yml` key, you do not have to worry about this.
+
+#### <a name="config-repositories"></a>Repositories
+
+Unless you compose task workflow entirely out of plugins with inline configuration/scripts, you will likely need to pull in existing resources to accomplish your goals, for example: an Ansible playbook & inventory are required to use the Ansible plugin.
+
+These repositories are defined in the config file like this:
+
+```yaml
+repositories:
+  - name: automation-repo-1
+    url: https://github.com/my-org/some-ansible-playbooks.git
+  - name: automation-repo-2
+    url: https://github.com/my-org/some-ansible-playbooks-2.git
+```
+
+Upon application startup, these repositories are cloned. They can be referenced from that point forward by their name as defined here, _not_ by any part of their Git URL.
+
+**The same scheduling mechanism used to trigger tasks is _automatically configured_ to pull new changes from these repositories every two minutes, so updates to these dependencies should be picked up _without any user intervention required_.**
+
+TODO: Private repository support & documentation
+
+#### <a name="config-triggers"></a>Triggers
+
+All tasks definitions require a `triggers` block, else the task would never be able to execute and thus the definition would be useless. Multiple triggers can be defined for the same task. Two kinds of triggers are currently supported: Schedule, and Webhook.
+
+##### Schedule
+
+Schedule triggers execute a task periodically based on a time condition, and can take a number of forms:
+
+```yaml
+tasks:
+  ...
+    triggers:
+      - type: scheduled
+        every: minute
+```
+
+```yaml
+tasks:
+  ...
+    triggers:
+      - type: scheduled
+        every: 3 hours
+```
+
+```yaml
+tasks:
+  ...
+    triggers:
+      - type: scheduled
+        every: thursday
+        at: "15:30"
+```
+
+The following interval keywords are available to use in the `every` statement:
+
+
+* second
+* seconds
+* minute
+* minutes
+* hour
+* hours
+* day
+* days
+* week
+* weeks
+* monday
+* tuesday
+* wednesday
+* thursday
+* friday
+* saturday
+* sunday
+
+##### Webhook
+
+Webhook triggers configure the app to listen for a `GET` request on a certain route. Whenever a request is encountered, the tasks is run. For example:
+ 
+```yaml
+tasks:
+  ...
+    triggers:
+      - type: webhook
+        route: /run_task_x
+``` 
+ 
+Webhook triggers allow for slightly more advanced execution, in that **webhook-triggered tasks can receive external inputs**. Any URL parameters received as a part of a webhook call are parsed and added to the _task execution context_. 
+
+Ex. `https://my-app-url/run_task_x?param1=stuff&param2=things`
+
+See [context](#configuration-context) below.
+
+> :exclamation: **The internal webserver is only started if at least one task defines a webhook trigger.** If no tasks have a webhook trigger defined, server initialization is skipped entirely.
+
+
+### <a name="deployment"></a>Deployment
+
+This is fundamentally just a Python project that versions dependencies in `Pipenv` & `Pipenv.lock` files. Any system that can run projects using Pipenv should be able to run this application. That said, there is a Helm chart available to get up and running quickly on OpenShift.
+
+The Helm chart is available in `/helm` and has a few input parameters:
+
+| Parameter | Description | Default |
+|---|---|---|
+| `setupConfigMap` | Create a ConfigMap which contains a workflow definition file. Requires `configFileContents` to also be set. | `false` |
+| `configFileContents` | The contents of the config file for `setupConfigMap` to create. | `""` |
+| `configMapName` | The pre-existing ConfigMap to use (if you don't use `setupConfigMap`) | `emissary-config` |
+| `giveClusterAdmin` | Setup a `ClusterRoleBinding` giving the deployment `cluster-admin` privileges if you would like to use it to manage cluster resources. | `false` |
+| `specifyServiceAccount` | If you don't want to use `giveClusterAdmin` but you _do_ want to specify your own service account to run as, enable this option. | `false` |
+| `serviceAccount` | The service account to use if you've enabled `specifyServiceAccount` | `""` |
+
+The Helm chart can be used as shown:
+
+```shell script
+cd helm
+helm template my-deployment-name . | oc apply -f -
+```
 
 ## Example Workflow
 

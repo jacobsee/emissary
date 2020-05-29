@@ -16,7 +16,7 @@ def configure_repository(repository):
         repo = Repo.init(repo_directory)
         repo.remotes.origin.pull()
 
-    schedule.every(1).minutes.do(__wrap_repo_pull(repo))
+    schedule.every(2).minutes.do(__wrap_repo_pull(repo))
     print(f"Configured scheduler for pulling repository {repository['name']}")
 
 
