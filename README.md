@@ -175,7 +175,7 @@ tasks:
       - plugin: script
         params:
           script: |
-            from os import os
+            from os import listdir
             listdir(".")
 ```
 
@@ -215,7 +215,7 @@ tasks:
         repository: automation-repo-2
         params:
           script: |
-            from os import os
+            from os import listdir
             listdir(".")
 ```
 
@@ -238,7 +238,7 @@ tasks:
         path: some-subdirectory
         params:
           script: |
-            from os import os
+            from os import listdir
             listdir(".")
 ```
 
