@@ -10,12 +10,12 @@ A higher-order workflow composition and triggering mechanism designed to take ad
   * [Repositories](#config-repositories)
   * [Triggers](#config-triggers)
   * [Steps & Parameters](#config-steps-parameters)
-  * Context
-  * Concurrency
-* Available Plugins
-  * Ansible
-  * Kubernetes
-  * Script
+  * [Context](#config-context)
+  * [Concurrency](#config-concurrency)
+* [Available Plugins](#plugins)
+  * [Ansible](#plugins-ansible)
+  * [Kubernetes](#plugins-kubernetes)
+  * [Script](#plugins-script)
 * [Deployment](#deployment)
 
 ### <a name="hdiw"></a>How Does It Work?
@@ -162,7 +162,7 @@ See [context](#configuration-context) below.
 
 > :exclamation: **The internal webserver is only started if at least one task defines a webhook trigger.** If no tasks have a webhook trigger defined, server initialization is skipped entirely.
 
-### <a name="config-steps-parameters"></a>Steps & Parameters
+#### <a name="config-steps-parameters"></a>Steps & Parameters
 
 Each task is made up of at least one _step_. A step is an individual invocation of a plugin with certain parameters. 
 
@@ -241,6 +241,91 @@ tasks:
             from os import listdir
             listdir(".")
 ```
+
+#### <a name="config-context"></a>Context
+
+Each step in a task run occurs with one single, mutable _context_. The context is initialized as empty at the start of a task run, unless the task is triggered from a webhook with parameters - in which case, the context is initialized with those parameters. 
+
+It is up to each individual plugin how the context should be used, and whether it is writable in any way, or read-only. The context is the only way (aside from writing to the filesystem) for a step to pass data to later steps.
+
+Some examples of using context:
+
+```yaml
+tasks:
+  - name: test
+    triggers:
+      - type: webhook
+        route: /test
+    steps:
+      - plugin: script
+        params:
+          script: |
+            context["stuff"] = "setting a context var"
+      - plugin: script
+        params:
+          script: |
+            print(f"The previous step told me: {context['stuff']}")
+```
+
+or:
+
+```yaml
+tasks:
+  - name: test
+    triggers:
+      - type: webhook
+        route: /test
+    steps:
+      - plugin: script
+        params:
+          script: |
+            print(f"The webhook told me: {context['stuff']}")
+```
+
+```shell script
+curl http://this-app/test?stuff=context_data
+```
+
+or:
+
+```yaml
+tasks:
+  - name: test
+    triggers:
+      - type: webhook
+        route: /test
+    steps:
+      - plugin: script
+        params:
+          script: |
+            context["var_one"] = "input to an Ansible playbook"
+      - plugin: ansible
+        repository: automation-repo
+        params:
+          playbook_path: site.yml
+          inventory_path: inventory
+          extra_vars:
+            # note that var_one is not defined here
+            var_two: stuff
+```
+
+(since the `ansible` plugin automatically imports context vars as extra vars if they're not overridden by an explicit declaration in `extra_vars`)
+
+#### <a name="config-Concurrency"></a>Concurrency
+
+Two different tasks are able to run concurrently without interfering with each other (even if they depend on the same repositories).
+
+Multiple runs of _the same task_ are not currently allowed, since this is probably undesirable. If a task is running and a second execution of that task is queued by the scheduler or by a webhook call, the second execution is immediately terminated (with a warning in the console) and no plugins are executed.
+
+TODO: Make this configurable per-task since it's not really a technical limitation at all.
+
+### <a name="plugins"></a>Plugins
+
+#### <a name="plugins-ansiblet"></a>Ansible
+
+#### <a name="plugins-kubernetes"></a>Kubernetes
+
+#### <a name="plugins-script"></a>Script
 
 ### <a name="deployment"></a>Deployment
 
