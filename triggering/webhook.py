@@ -20,13 +20,13 @@ class WebHook:
             return repr(self)
 
         def add(self, name, route, job):
-            self.app.add_url_rule(route, route, self.__wrap_job(name, job))
+            self.app.add_url_rule(route, route, self.__wrap_job(name, job), methods=["GET", "POST"])
 
         def __wrap_job(self, name, job):
             def wrapped_job():
                 print(f"Webhook handler is executing task {name} at {datetime.datetime.now()}")
                 try:
-                    value = job(context=dict(request.args))
+                    value = job(context=dict(request.values))
                     if isinstance(value, str) or isinstance(value, tuple):
                         return value
                     else:
