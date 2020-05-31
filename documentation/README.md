@@ -2,7 +2,7 @@
 
 * [Deployment](deployment.md)
 * Configuration
-  * [Repositories](configuration/repositories.mds)
+  * [Repositories](configuration/repositories.md)
   * [Triggers](configuration/triggers.md)
   * [Steps & Parameters](configuration/steps-parameters.md)
   * [Context](configuration/context.md)
