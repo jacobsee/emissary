@@ -7,6 +7,7 @@
   * [Steps & Parameters](configuration/steps-parameters.md)
   * [Context](configuration/context.md)
   * [Concurrency](configuration/concurrency.md)
+  * [Error Handling](configuration/error-handling.md)
 * Available Plugins
   * [Ansible](plugins/ansible.md)
   * [Kubernetes](plugins/kubernetes.md)

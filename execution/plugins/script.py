@@ -28,9 +28,15 @@ def process(context, params):
         raise Exception
 
     if "script" in params:
-        code = code_template.render(code_inject=params["script"])
-        local_vars = dict(locals())
-        exec(code, local_vars)
-        result = local_vars["fn"](params)
-        context.update(local_vars["context"])
-        return result
+        return execute(params["script"], context, params)
+    elif "script_file" in params:
+        return execute(open(params["script_file"]).read(), context, params)
+
+
+def execute(script, context, params):
+    code = code_template.render(code_inject=script)
+    local_vars = dict(locals())
+    exec(code, local_vars)
+    result = local_vars["fn"](params)
+    context.update(local_vars["context"])
+    return result

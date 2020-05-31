@@ -82,13 +82,19 @@ def lock(fn):
 
 def handle_errors(task):
 
-    def handler(fn):
-        def f(*args, **kwargs):
-            try:
+    if "disable_error_handling" in task and task["disable_error_handling"]:
+        def handler(fn):
+            def f(*args, **kwargs):
                 fn(*args, **kwargs)
-            except Exception as e:
-                print(f"ERROR EXECUTING TASK {task['name']}:")
-                print(str(e))
+            return f
+    else:
+        def handler(fn):
+            def f(*args, **kwargs):
+                try:
+                    fn(*args, **kwargs)
+                except Exception as e:
+                    print(f"ERROR EXECUTING TASK {task['name']}:")
+                    print(str(e))
 
-        return f
+            return f
     return handler
