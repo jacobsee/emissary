@@ -64,11 +64,13 @@ tasks:
         route: /run_task_x
 ``` 
  
-Webhook triggers allow for slightly more advanced execution, in that **webhook-triggered tasks can receive external inputs**. Any URL parameters received as a part of a `GET` or form parameters received as part of a `POST` are parsed and added to the _task execution context_. 
+Webhook triggers allow for slightly more advanced execution, in that **webhook-triggered tasks can receive external inputs**. Any URL parameters received as a part of a `GET` request or form parameters received as a part of a `POST` request are parsed and added to the _task execution context_. Additionally, data posted with the header `Content-Type: application/json` will be decoded automatically before being written to the context.
 
 ex. `curl "https://my-app-url/run_task_x?param1=stuff&param2=things"`
 
 or `curl "https://my-app-url/run_task_x" -XPOST -d "param1=stuff" -d "param2=things"`
+
+or `curl "https://my-app-url/run_task_x" -XPOST --header "Content-Type: application/json" -d '{"param1": "stuff", "param2": "things"}'`
 
 See [context](context.md)
 

@@ -26,7 +26,10 @@ class WebHook:
             def wrapped_job():
                 print(f"Webhook handler is executing task {name} at {datetime.datetime.now()}")
                 try:
-                    value = job(context=dict(request.values))
+                    if hasattr(request, "json") and request.json:
+                        value = job(context=dict(request.json))
+                    else:
+                        value = job(context=dict(request.values))
                     if isinstance(value, str) or isinstance(value, tuple):
                         return value
                     else:
