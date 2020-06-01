@@ -190,7 +190,7 @@ thing3
 
 ## Repository Scoping
 
-If a step does not specify a `repository`, it is run in a working directory with _every repository_ available to it. For example, the task defined by the above YAML spec, with the following repository definition in the config file:
+If a step does not specify a `repository`, it is run in a working directory with _every repository_ available to it. For example, the task defined by the following YAML spec, with the following repository definition in the config file:
 
 ```yaml
 repositories:
@@ -198,6 +198,14 @@ repositories:
     url: https://github.com/my-org/some-ansible-playbooks.git
   - name: automation-repo-2
     url: https://github.com/my-org/some-ansible-playbooks-2.git
+
+tasks:
+    steps:
+      - plugin: script
+        params:
+          script: |
+            from os import listdir
+            listdir(".")
 ```
 
 Would see a directory structure like this:
@@ -217,8 +225,13 @@ Would see a directory structure like this:
 However, a step _scoped_ to a certain repository: 
 
 ```yaml
+repositories:
+  - name: automation-repo-1
+    url: https://github.com/my-org/some-ansible-playbooks.git
+  - name: automation-repo-2
+    url: https://github.com/my-org/some-ansible-playbooks-2.git
+
 tasks:
-  ...
     steps:
       - plugin: script
         repository: automation-repo-2
@@ -239,8 +252,13 @@ Would be executed inside of that repository directory:
 Steps may also make use of an additional `path` input to scope the execution of that step to a subdirectory of the repository: 
 
 ```yaml
+repositories:
+  - name: automation-repo-1
+    url: https://github.com/my-org/some-ansible-playbooks.git
+  - name: automation-repo-2
+    url: https://github.com/my-org/some-ansible-playbooks-2.git
+
 tasks:
-  ...
     steps:
       - plugin: script
         repository: automation-repo-2
