@@ -11,7 +11,10 @@ The Helm chart is available in `/helm` and has a few input parameters:
 | `configMapName` | The pre-existing ConfigMap to use (if you don't use `setupConfigMap`) | `emissary-config` |
 | `giveClusterAdmin` | Setup a `ClusterRoleBinding` giving the deployment `cluster-admin` privileges if you would like to use it to manage cluster resources. | `false` |
 | `specifyServiceAccount` | If you don't want to use `giveClusterAdmin` but you _do_ want to specify your own service account to run as, enable this option. | `false` |
-| `serviceAccount` | The service account to use if you've enabled `specifyServiceAccount` | `""` |
+| `serviceAccount` | The service account to use if you've enabled `specifyServiceAccount` | Not Set |
+| `sshSecretConfigMap` | The name of a secret containing an SSH key to be mounted at `/sshSecret/ssh-privatekey` (ignored if not set) | Not Set |
+| `exposeRoute` | Set to true to create an OCP route object | false |
+| `routeHost` | If `exposeRoute` is true, set this to explicitly set the host | Not Set |
 
 The Helm chart can be used as shown:
 

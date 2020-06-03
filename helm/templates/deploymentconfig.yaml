@@ -33,7 +33,7 @@ spec:
         imagePullPolicy: Always
         name: {{ include "app.fullname" . }}
         ports:
-        - containerPort: 8080
+        - containerPort: 5000
           protocol: TCP
         resources: {}
         terminationMessagePath: /dev/termination-log
@@ -41,6 +41,10 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /configs
+        {{- if .Values.sshSecretConfigMap }}
+        - name: ssh-secret-volume
+          mountPath: /sshSecret
+        {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -50,6 +54,11 @@ spec:
       - name: config-volume
         configMap:
           name: {{ .Values.configMapName }}
+      {{- if .Values.sshSecretConfigMap }}
+      - name: ssh-secret-volume
+        secret:
+          secretName: {{ .Values.sshSecretConfigMap }}
+      {{- end }}
       {{- if .Values.giveClusterAdmin }}
       serviceAccount: {{ include "app.fullname" . }}
       serviceAccountName: {{ include "app.fullname" . }}

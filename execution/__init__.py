@@ -32,8 +32,7 @@ def build_task(task):
     @handle_errors(task)
     def task_function(context={}):
         with tempfile.TemporaryDirectory() as temp_dir:
-            required_repositories = {step["repository"] for step in task["steps"] if "repository" in step}
-            for repository in required_repositories:
+            for repository in [f.name for f in os.scandir("tmp") if f.is_dir()]:
                 shutil.copytree("tmp/" + repository, temp_dir + "/" + repository)
             with cd(temp_dir):
                 for step in task["steps"]:
