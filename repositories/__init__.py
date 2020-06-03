@@ -10,7 +10,8 @@ def configure_repository(repository):
 
     if "pull_secret" in repository and not repository["url"].startswith("http"):
         env = {
-            "GIT_SSH_COMMAND": generate_ssh_command(repository)
+            "GIT_SSH_COMMAND": generate_ssh_command(repository),
+            "GIT_SSH": generate_ssh_command(repository)
         }
     else:
         env = {}
