@@ -29,7 +29,7 @@ def run_action(params):
     elif params["action"] == "add-all-changes":
         repo = add_all(repo_directory)
     elif params["action"] == "commit":
-        commit(repo_directory, message, f"{author_name} <{author_email}>")
+        commit(repo_directory, message, author_name, author_email)
     elif params["action"] == "push":
         push(url, repo_directory, env)
 
@@ -53,10 +53,18 @@ def add_all(repo_directory):
     return repo
 
 
-def commit(repo_directory, message, author):
+def commit(repo_directory, message, author_name, author_email):
     repo = Repo.init(repo_directory)
-    repo.git.commit('-m', message, author=author)
-    print("Committed to repository")
+    repo.config_writer().set_value("user", "name", author_name).release()
+    repo.config_writer().set_value("user", "email", author_email).release()
+    try:
+        repo.git.commit('-m', message, author=f"{author_name} <{author_email}>")
+        print("Committed to repository")
+    except Exception as e:
+        if "nothing to commit, working tree clean" in str(e):
+            print("Nothing to commit")
+        else:
+            raise e
 
 
 def push(url, repo_directory, env={}):
