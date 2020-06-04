@@ -30,7 +30,7 @@ def configure_repository(repository):
 
 def generate_ssh_command(repository):
     if "ssh_private_key" in repository["secret"]:
-        git_ssh_identity_file = os.path.expanduser(repository["secret"]["from_file"])
+        git_ssh_identity_file = os.path.expanduser(repository["secret"]["ssh_private_key"])
         return f"ssh -o 'StrictHostKeyChecking=no' -i {git_ssh_identity_file}"
     else:
         raise Exception("Git secret method not recognized.")
