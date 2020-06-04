@@ -6,7 +6,7 @@ git:
   url: https://github.com/jacobsee/emissary.git
   ref: master
 
-builderImage: python:3.6
+builderImage: registry.access.redhat.com/ubi8/python-38:latest
 
 ################
 # Runtime params

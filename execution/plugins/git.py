@@ -1,5 +1,4 @@
 import os
-from execution.cd import cd
 from repositories import generate_ssh_command
 from git import Repo
 
@@ -7,11 +6,7 @@ from git import Repo
 def process(context, params):
     if "action" not in params:
         raise Exception("Git plugin requires `action` to be set as a parameter.")
-    if "directory" in params and os.path.exists(params["directory"]):
-        with cd(params["directory"]):
-            run_action(params)
-    else:
-        run_action(params)
+    run_action(params)
 
 
 def run_action(params):
@@ -31,11 +26,12 @@ def run_action(params):
 
     if params["action"] == "clone" or params["action"] == "pull":
         repo = fetch(url, repo_directory, branch, env)
-    elif params["action"] == "commit-all-changes":
-        repo = add_all()
-        commit(repo, message, f"{author_name} <{author_email}>")
+    elif params["action"] == "add-all-changes":
+        repo = add_all(repo_directory)
+    elif params["action"] == "commit":
+        commit(repo_directory, message, f"{author_name} <{author_email}>")
     elif params["action"] == "push":
-        commit(url, repo_directory, env)
+        push(url, repo_directory, env)
 
 
 def fetch(url, repo_directory, branch, env={}):
@@ -50,14 +46,15 @@ def fetch(url, repo_directory, branch, env={}):
     return repo
 
 
-def add_all():
-    repo = Repo.init(".")
+def add_all(repo_directory):
+    repo = Repo.init(repo_directory)
     repo.git.add(all=True)
     print("All files added")
     return repo
 
 
-def commit(repo, message, author):
+def commit(repo_directory, message, author):
+    repo = Repo.init(repo_directory)
     repo.git.commit('-m', message, author=author)
     print("Committed to repository")
 
@@ -65,3 +62,4 @@ def commit(repo, message, author):
 def push(url, repo_directory, env={}):
     repo = Repo.init(repo_directory)
     repo.remotes.origin.push(env=env)
+    print("Pushed repository")
