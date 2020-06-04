@@ -34,6 +34,8 @@ def run_action(params):
     elif params["action"] == "commit-all-changes":
         repo = add_all()
         commit(repo, message, f"{author_name} <{author_email}>")
+    elif params["action"] == "push":
+        commit(url, repo_directory, env)
 
 
 def fetch(url, repo_directory, branch, env={}):
@@ -58,3 +60,8 @@ def add_all():
 def commit(repo, message, author):
     repo.git.commit('-m', message, author=author)
     print("Committed to repository")
+
+
+def push(url, repo_directory, env={}):
+    repo = Repo.init(repo_directory)
+    repo.remotes.origin.push(env=env)
