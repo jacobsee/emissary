@@ -28,7 +28,7 @@ def initialize(task):
 def build_task(task):
 
     @multithread
-    @lock
+    @determine_concurrency_mode(task)
     @handle_errors(task)
     def task_function(context={}):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -100,19 +100,26 @@ def multithread(fn):
     return run_threaded
 
 
-def lock(fn):
-    mutex = Lock()
+def determine_concurrency_mode(task):
+    if "enable_concurrency" in task and task["enable_concurrency"] is True:
+        def handle_concurrency(fn):
+            def enable_concurrency(*args, **kwargs):
+                fn(*args, **kwargs)
+            return enable_concurrency
+    else:
+        def handle_concurrency(fn):
+            mutex = Lock()
 
-    def locker(*args, **kwargs):
-        if mutex.acquire(False):
-            try:
-                return fn(*args, **kwargs)
-            finally:
-                mutex.release()
-        else:
-            print("Task aborted - unable to acquire thread lock (is it already running?)")
-
-    return locker
+            def restrict_concurrency(*args, **kwargs):
+                if mutex.acquire(False):
+                    try:
+                        return fn(*args, **kwargs)
+                    finally:
+                        mutex.release()
+                else:
+                    print("Task aborted - Another instance is already running and concurrency has not been enabled")
+            return restrict_concurrency
+    return handle_concurrency
 
 
 def handle_errors(task):

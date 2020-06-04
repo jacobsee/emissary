@@ -8,10 +8,9 @@ def configure_repository(repository):
         os.makedirs("tmp")
     repo_directory = f"tmp/{repository['name']}"
 
-    if "pull_secret" in repository and not repository["url"].startswith("http"):
+    if "secret" in repository and not repository["url"].startswith("http"):
         env = {
-            "GIT_SSH_COMMAND": generate_ssh_command(repository),
-            "GIT_SSH": generate_ssh_command(repository)
+            "GIT_SSH_COMMAND": generate_ssh_command(repository)
         }
     else:
         env = {}
@@ -30,11 +29,11 @@ def configure_repository(repository):
 
 
 def generate_ssh_command(repository):
-    if "from_file" in repository["pull_secret"]:
-        git_ssh_identity_file = os.path.expanduser(repository["pull_secret"]["from_file"])
+    if "ssh_private_key" in repository["secret"]:
+        git_ssh_identity_file = os.path.expanduser(repository["secret"]["from_file"])
         return f"ssh -o 'StrictHostKeyChecking=no' -i {git_ssh_identity_file}"
     else:
-        raise Exception("Git pull secret method not recognized.")
+        raise Exception("Git secret method not recognized.")
 
 
 def __wrap_repo_pull(repo, env):

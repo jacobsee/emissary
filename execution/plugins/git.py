@@ -17,7 +17,7 @@ def run_action(params):
     author_email = params["author_email"] if "author_email" in params else "email@email.com"
     url = params["url"] if "url" in params else None
 
-    if "pull_secret" in params and url and not url.startswith("http"):
+    if "secret" in params and url and not url.startswith("http"):
         env = {
             "GIT_SSH_COMMAND": generate_ssh_command(params)
         }
